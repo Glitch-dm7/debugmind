@@ -1,0 +1,24 @@
+services:
+  cognee:
+    image: cognee/cognee:main
+    container_name: cognee
+    ports:
+      - "8000:8000"
+    environment:
+      - LLM_API_KEY=${LLM_API_KEY}
+      - LLM_PROVIDER=${LLM_PROVIDER}
+      - LLM_MODEL=${LLM_MODEL}
+      - EMBEDDING_PROVIDER=${EMBEDDING_PROVIDER}
+      - EMBEDDING_MODEL=${EMBEDDING_MODEL}
+      - VECTOR_DB_PROVIDER=lancedb
+      - DB_PROVIDER=sqlite
+      - ENV=local
+      - REQUIRE_AUTHENTICATION=false 
+      - ENABLE_BACKEND_ACCESS_CONTROL=false
+      - COGNEE_SKIP_CONNECTION_TEST=true
+    volumes:
+      - cognee_data:/app/data
+    restart: unless-stopped
+
+volumes:
+  cognee_data:
