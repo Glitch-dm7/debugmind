@@ -183,22 +183,22 @@ export async function recallSimilarBugs(
 
 // ─── improve() ───────────────────────────────────────────────────────────────
 // Stores feedback as a new memory entry so future recalls factor it in.
-export async function improveConfidence(
-  bugId: string,
-  update: { confirmCount: number; denyCount: number }
-): Promise<void> {
-  const feedbackText = `
-    FEEDBACK ENTRY
-    BugId: ${bugId}
-    Outcome: ${update.confirmCount > 0 ? "fix worked" : "fix did not apply"}
-    ConfirmCount: ${update.confirmCount}
-    DenyCount: ${update.denyCount}
-    Timestamp: ${new Date().toISOString()}
-  `.trim();
+// export async function improveConfidence(
+//   bugId: string,
+//   update: { confirmCount: number; denyCount: number }
+// ): Promise<void> {
+//   const feedbackText = `
+//     FEEDBACK ENTRY
+//     BugId: ${bugId}
+//     Outcome: ${update.confirmCount > 0 ? "fix worked" : "fix did not apply"}
+//     ConfirmCount: ${update.confirmCount}
+//     DenyCount: ${update.denyCount}
+//     Timestamp: ${new Date().toISOString()}
+//   `.trim();
 
-  await http.post("/api/v1/add", { data: feedbackText });
-  await http.post("/api/v1/cognify");
-}
+//   await http.post("/api/v1/add", { data: feedbackText });
+//   await http.post("/api/v1/cognify");
+// }
 
 // ─── forget() ────────────────────────────────────────────────────────────────
 export async function forgetProject(

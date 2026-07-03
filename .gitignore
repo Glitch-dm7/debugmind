@@ -18,5 +18,4 @@ cognee_data/
 # OS
 .DS_Store
 
-backend/data/
 backend/node_modules/

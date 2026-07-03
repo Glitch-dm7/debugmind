@@ -1,9 +1,11 @@
-import { existsSync, readFileSync, writeFileSync } from "fs";
+import {
+  existsSync,
+  readFileSync,
+  writeFileSync,
+  mkdirSync,
+} from "fs";
 
 // Simple local JSON store for bug metadata
-// In production this would be a proper DB — for v1 a JSON file is fine
-// and actually makes for a good HLD talking point:
-// "Cognee owns semantic/graph memory, we own structured metadata"
 
 const STORE_PATH = "./data/bugs.json";
 
@@ -21,13 +23,30 @@ export interface StoredBug {
   lastConfirmedAt?: string;
 }
 
-type BugStore = Record<string, StoredBug>; // keyed by bug id
+type BugStore = Record<string, StoredBug>;
+
+// ─── Ensure Store Exists ─────────────────────────────────────────────────────
+
+function ensureStore(): void {
+  const dir = STORE_PATH.split("/").slice(0, -1).join("/");
+
+  // Create directory if missing
+  if (!existsSync(dir)) {
+    mkdirSync(dir, { recursive: true });
+  }
+
+  // Create empty JSON file if missing
+  if (!existsSync(STORE_PATH)) {
+    writeFileSync(STORE_PATH, JSON.stringify({}, null, 2));
+  }
+}
 
 // ─── Load / Save ─────────────────────────────────────────────────────────────
 
 function load(): BugStore {
   try {
-    if (!existsSync(STORE_PATH)) return {};
+    ensureStore();
+
     return JSON.parse(readFileSync(STORE_PATH, "utf-8"));
   } catch {
     return {};
@@ -35,15 +54,12 @@ function load(): BugStore {
 }
 
 function save(store: BugStore): void {
-  // Ensure data dir exists
-  const dir = STORE_PATH.split("/").slice(0, -1).join("/");
-  if (!existsSync(dir)) {
-    import("fs").then(({ mkdirSync }) => mkdirSync(dir, { recursive: true }));
-  }
+  ensureStore();
+
   writeFileSync(STORE_PATH, JSON.stringify(store, null, 2));
 }
 
-// ─── Public API ───────────────────────────────────────────────────────────────
+// ─── Public API ──────────────────────────────────────────────────────────────
 
 export const bugStore = {
   save(bug: StoredBug): void {
@@ -58,7 +74,11 @@ export const bugStore = {
 
   getByFingerprint(fingerprint: string): StoredBug | null {
     const store = load();
-    return Object.values(store).find((b) => b.fingerprint === fingerprint) ?? null;
+    return (
+      Object.values(store).find(
+        (b) => b.fingerprint === fingerprint
+      ) ?? null
+    );
   },
 
   updateConfidence(
@@ -67,6 +87,7 @@ export const bugStore = {
   ): StoredBug | null {
     const store = load();
     const bug = store[id];
+
     if (!bug) return null;
 
     if (outcome === "worked") {
@@ -78,6 +99,7 @@ export const bugStore = {
 
     store[id] = bug;
     save(store);
+
     return bug;
   },
 

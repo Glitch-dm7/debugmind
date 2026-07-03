@@ -9,7 +9,6 @@ import type {
 import {
   rememberBug,
   recallSimilarBugs,
-  improveConfidence,
 } from "./cogneeClient";
 import { bugStore } from "./bugStore.js";
 
@@ -103,6 +102,16 @@ async function recall(
 
   return results
     .filter((r) => !r.metadata.archived)
+    .filter((r) => {
+      const text = r.text?.toLowerCase() ?? "";
+      const isEmpty =
+        text.includes("context is empty") ||
+        text.includes("i am sorry") ||
+        text.includes("cannot find similar") ||
+        text.includes("no similar bugs") ||
+        text.trim() === "";
+      return !isEmpty;
+    })
     .map((r) => {
       // Find best matching local bug by scoring keyword overlap with Cognee's answer
       const cogneeAnswer = r.text?.toLowerCase() ?? "";
@@ -156,16 +165,19 @@ function keywordOverlapScore(source: string, target: string): number {
 // ─── feedback() ──────────────────────────────────────────────────────────────
 
 async function feedback(req: FeedbackRequest): Promise<void> {
-  // Update local metadata store
+  // Update confidence in local store only — Cognee doesn't track feedback.
+  // The updated counts are read at recall() time to compute Wilson score.
   const updated = bugStore.updateConfidence(req.bugId, req.outcome);
 
-  if (updated) {
-    // Push updated confidence to Cognee too
-    await improveConfidence(req.bugId, {
-      confirmCount: updated.confirmCount,
-      denyCount: updated.denyCount,
-    });
+  if (!updated) {
+    throw new Error(`Bug ${req.bugId} not found in local store`);
   }
+
+  // Log for visibility
+  console.log(
+    `=== feedback: bug ${req.bugId.slice(0, 8)} → ${req.outcome} ` +
+    `(${updated.confirmCount}✓ ${updated.denyCount}✗)`
+  );
 }
 
 // ─── Confidence scoring ───────────────────────────────────────────────────────
