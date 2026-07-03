@@ -50,14 +50,14 @@ async function post<T>(path: string, body: unknown): Promise<T> {
 
 export const api = {
   submitBug: (payload: SubmitBugPayload) =>
-    post<{ success: boolean; bug: BugEntry }>("/bugs", payload),
+    post<{ success: boolean; bug: BugEntry }>("/api/bugs", payload),
 
   recall: (rawError: string, projectId?: string) =>
-    post<{ results: RecallResult[] }>("/bugs/recall", { rawError, projectId }),
+    post<{ results: RecallResult[] }>("/api/bugs/recall", { rawError, projectId }),
 
   feedback: (bugId: string, outcome: "worked" | "failed") =>
-    post<{ success: boolean }>("/bugs/feedback", { bugId, outcome }),
+    post<{ success: boolean }>("/api/bugs/feedback", { bugId, outcome }),
 
   archiveProject: (projectId: string, hardDelete = false) =>
-    post<{ success: boolean }>("/bugs/archive", { projectId, hardDelete }),
+    post<{ success: boolean }>("/api/bugs/archive", { projectId, hardDelete }),
 };

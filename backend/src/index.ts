@@ -19,7 +19,7 @@ app.use(
 app.get("/health", (c) => c.json({ status: "ok", ts: new Date().toISOString() }));
 
 // Routes
-app.route("/bugs", bugsRouter);
+app.route("/api/bugs", bugsRouter);
 
 // 404 fallback
 app.notFound((c) => c.json({ error: "Not found" }, 404));
