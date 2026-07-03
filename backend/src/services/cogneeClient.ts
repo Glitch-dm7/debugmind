@@ -3,11 +3,97 @@ import type { BugEntry } from "../types/index.ts";
 
 const BASE_URL = process.env.COGNEE_BASE_URL ?? "http://localhost:8000";
 
+const COGNEE_EMAIL = process.env.COGNEE_EMAIL ?? "default_user@example.com";
+const COGNEE_PASSWORD = process.env.COGNEE_PASSWORD ?? "default_password";
+
 const http = axios.create({
   baseURL: BASE_URL,
   headers: { "Content-Type": "application/json" },
   timeout: 120_000,
 });
+
+// ─── Auth token management ────────────────────────────────────────────────────
+// Token is fetched once on first request and reused for all subsequent calls.
+// If it expires (401), we re-login automatically.
+
+let authToken: string | null = null;
+
+async function getToken(): Promise<string> {
+  if (authToken) return authToken;
+
+  // Try login first
+  try {
+    console.log({COGNEE_EMAIL, COGNEE_PASSWORD})
+    const res = await fetch(`${BASE_URL}/api/v1/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: `username=${encodeURIComponent(COGNEE_EMAIL)}&password=${encodeURIComponent(COGNEE_PASSWORD)}`,
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      authToken = data.access_token;
+      console.log("=== Cognee auth: logged in as", COGNEE_EMAIL);
+      return authToken!;
+    }
+  } catch {}
+
+  // If login fails, try register then login
+  console.log("=== Cognee auth: login failed, trying register...");
+  await fetch(`${BASE_URL}/api/v1/auth/register`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email: COGNEE_EMAIL, password: COGNEE_PASSWORD }),
+  });
+
+  const res = await fetch(`${BASE_URL}/api/v1/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: `username=${encodeURIComponent(COGNEE_EMAIL)}&password=${encodeURIComponent(COGNEE_PASSWORD)}`,
+  });
+
+  if (!res.ok) throw new Error("Cognee auth failed — check credentials");
+
+  const data = await res.json();
+  authToken = data.access_token;
+  console.log("=== Cognee auth: registered + logged in as", COGNEE_EMAIL);
+  return authToken!;
+}
+
+// Attach token to every axios request automatically
+http.interceptors.request.use(async (config) => {
+  const token = await getToken();
+  config.headers["Authorization"] = `Bearer ${token}`;
+  return config;
+});
+
+// On 401, clear token and retry once (handles token expiry)
+http.interceptors.response.use(
+  (res) => res,
+  async (err) => {
+    if (err.response?.status === 401 && !err.config._retry) {
+      authToken = null;
+      err.config._retry = true;
+      const token = await getToken();
+      err.config.headers["Authorization"] = `Bearer ${token}`;
+      return http(err.config);
+    }
+    return Promise.reject(err);
+  }
+);
+
+// ─── Authenticated fetch wrapper ──────────────────────────────────────────────
+// Used for multipart requests where we can't use axios easily
+async function authFetch(url: string, options: RequestInit = {}): Promise<Response> {
+  const token = await getToken();
+  return fetch(url, {
+    ...options,
+    headers: {
+      ...options.headers,
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}
 
 // ─── remember() ──────────────────────────────────────────────────────────────
 // Uses /api/v1/add + /api/v1/cognify separately (the reliable path).
@@ -16,38 +102,36 @@ export async function rememberBug(bug: BugEntry): Promise<void> {
   const document = formatBugAsDocument(bug);
   const datasetName = `debugmind_${bug.projectId}`;
 
+  console.log("=== Sending to /api/v1/add ===");
+
   const formData = new FormData();
   const fileBlob = new Blob([document], { type: "text/plain" });
   formData.append("data", fileBlob, `bug_${bug.id}.txt`);
   formData.append("datasetName", datasetName);
 
-  const addRes = await fetch(`${BASE_URL}/api/v1/add`, {
+  const addRes = await authFetch(`${BASE_URL}/api/v1/add`, {  // ← authFetch
     method: "POST",
     body: formData,
   });
 
   const addBody = await addRes.json().catch(() => ({}));
+  console.log("=== /api/v1/add response ===", addRes.status, addBody);
 
   if (!addRes.ok) {
-    console.error("=== /api/v1/add FAILED ===", addBody);
     throw new Error(`/api/v1/add failed: ${JSON.stringify(addBody)}`);
   }
 
-  // Use dataset_id from add response to scope cognify correctly
   const datasetId = addBody?.dataset_id;
-
-  const cognifyRes = await fetch(`${BASE_URL}/api/v1/cognify`, {
+  const cognifyRes = await authFetch(`${BASE_URL}/api/v1/cognify`, {  // ← authFetch
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-       datasets: [datasetName],
-    }),
+    body: JSON.stringify({ datasets: [datasetName] }),
   });
 
   const cognifyBody = await cognifyRes.json().catch(() => ({}));
+  console.log("=== /api/v1/cognify response ===", cognifyRes.status, cognifyBody);
 
   if (!cognifyRes.ok) {
-    console.error("=== /api/v1/cognify FAILED ===", cognifyBody);
     throw new Error(`/api/v1/cognify failed: ${JSON.stringify(cognifyBody)}`);
   }
 }
