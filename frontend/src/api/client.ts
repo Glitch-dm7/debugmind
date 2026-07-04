@@ -74,7 +74,7 @@ export const api = {
     post<{ success: boolean }>("/api/bugs/unarchive", { projectId }),
 
   getProjects: async () => {
-    const res = await fetch("${BASE}/api/bugs/projects");
+    const res = await fetch(`${BASE}/api/bugs/projects`);
     const data = await res.json();
     return data as { projects: Project[] };
   },
