@@ -5,11 +5,22 @@ const BASE_URL = process.env.COGNEE_BASE_URL ?? "http://localhost:8000";
 
 const COGNEE_EMAIL = process.env.COGNEE_EMAIL ?? "default_user@example.com";
 const COGNEE_PASSWORD = process.env.COGNEE_PASSWORD ?? "default_password";
+const COGNEE_API_KEY = process.env.COGNEE_API_KEY ?? "";
+const USE_CLOUD = !!COGNEE_API_KEY;
+
 
 const http = axios.create({
   baseURL: BASE_URL,
   headers: { "Content-Type": "application/json" },
   timeout: 120_000,
+});
+
+http.interceptors.request.use((config) => {
+  if (USE_CLOUD) {
+    config.headers["X-Api-Key"] = COGNEE_API_KEY;
+  }
+  config.headers["Content-Type"] = config.headers["Content-Type"] ?? "application/json";
+  return config;
 });
 
 // ─── Auth token management ────────────────────────────────────────────────────
@@ -82,17 +93,15 @@ http.interceptors.response.use(
   }
 );
 
-// ─── Authenticated fetch wrapper ──────────────────────────────────────────────
-// Used for multipart requests where we can't use axios easily
+// Authenticated fetch for multipart requests
 async function authFetch(url: string, options: RequestInit = {}): Promise<Response> {
-  const token = await getToken();
-  return fetch(url, {
-    ...options,
-    headers: {
-      ...options.headers,
-      Authorization: `Bearer ${token}`,
-    },
-  });
+  const headers: Record<string, string> = {
+    ...(options.headers as Record<string, string> ?? {}),
+  };
+  if (USE_CLOUD) {
+    headers["X-Api-Key"] = COGNEE_API_KEY;
+  }
+  return fetch(url, { ...options, headers });
 }
 
 // ─── remember() ──────────────────────────────────────────────────────────────

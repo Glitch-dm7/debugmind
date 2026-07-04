@@ -10,7 +10,7 @@ app.use("*", logger());
 app.use(
   "*",
   cors({
-    origin: "http://localhost:5173", // Vite dev server
+    origin: process.env.FRONTEND_URL ?? "http://localhost:5173",
     allowMethods: ["GET", "POST", "PATCH", "DELETE"],
   })
 );
