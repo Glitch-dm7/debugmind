@@ -17,15 +17,18 @@ const http = axios.create({
 // ── Request interceptor — attach auth based on mode ───────────────────────
 http.interceptors.request.use(async (config) => {
   if (USE_CLOUD) {
-    console.log("[API REQUEST] Using CLOUD mode");
     config.headers["X-Api-Key"] = COGNEE_API_KEY;
   } else {
-    console.log("[API REQUEST] Using LOCAL/AUTH mode");
     const token = await getToken();
     config.headers["Authorization"] = `Bearer ${token}`;
   }
+
   // Only set Content-Type if not multipart (multipart sets its own boundary)
-  if (!config.headers["Content-Type"]) {
+  if (
+    config.data &&
+    !(config.data instanceof FormData) &&
+    !config.headers["Content-Type"]
+  ) {
     config.headers["Content-Type"] = "application/json";
   }
   return config;
@@ -116,30 +119,19 @@ export async function rememberBug(bug: BugEntry): Promise<string | undefined> {
   formData.append("data", fileBlob, `bug_${bug.id}.txt`);
   formData.append("datasetName", datasetName);
 
-  const addRes = await fetch(`${BASE_URL}/api/v1/add`, {
-    method: "POST",
-    body: formData,
+  const addRes = await http.post("/api/v1/add", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
   });
 
-  if (USE_CLOUD) {
-    console.log("[API REQUEST] Using CLOUD mode");
-  } else {
-    console.log("[API REQUEST] Using LOCAL/AUTH mode");
-  }
-
-  const addBody = await addRes.json().catch(() => ({}));
-  if (!addRes.ok) throw new Error(`/api/v1/add failed: ${JSON.stringify(addBody)}`);
+  const addBody = addRes.data;
 
   const datasetId = addBody?.dataset_id as string | undefined;
 
-  const cognifyRes = await fetch(`${BASE_URL}/api/v1/cognify`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ datasets: [datasetName] }),
+  await http.post("/api/v1/cognify", {
+    datasets: [datasetName],
   });
-
-  const cognifyBody = await cognifyRes.json().catch(() => ({}));
-  if (!cognifyRes.ok) throw new Error(`/api/v1/cognify failed: ${JSON.stringify(cognifyBody)}`);
 
   return datasetId; // ← return to bugService so it can be stored in projectStore
 }
