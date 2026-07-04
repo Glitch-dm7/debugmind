@@ -2,7 +2,7 @@ services:
   - type: web
     name: debugmind-backend
     runtime: node
-    repo: https://github.com/YOUR_USERNAME/debugmind
+    repo: https://github.com/Glitch-dm7/debugmind
     rootDir: backend
     region: oregon
     plan: free
