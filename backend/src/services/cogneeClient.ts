@@ -8,6 +8,9 @@ const COGNEE_PASSWORD = process.env.COGNEE_PASSWORD ?? "default_password";
 const COGNEE_API_KEY = process.env.COGNEE_API_KEY ?? "";
 const USE_CLOUD = !!COGNEE_API_KEY;
 
+console.log("=== COGNEE CONFIG ===");
+console.log("BASE_URL:", BASE_URL);
+console.log("USE_CLOUD:", USE_CLOUD);
 
 const http = axios.create({
   baseURL: BASE_URL,
