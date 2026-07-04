@@ -17,8 +17,10 @@ const http = axios.create({
 // ── Request interceptor — attach auth based on mode ───────────────────────
 http.interceptors.request.use(async (config) => {
   if (USE_CLOUD) {
+    console.log("[API REQUEST] Using CLOUD mode");
     config.headers["X-Api-Key"] = COGNEE_API_KEY;
   } else {
+    console.log("[API REQUEST] Using LOCAL/AUTH mode");
     const token = await getToken();
     config.headers["Authorization"] = `Bearer ${token}`;
   }
