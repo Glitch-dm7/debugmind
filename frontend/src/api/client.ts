@@ -1,6 +1,6 @@
 // Typed API client — all fetch calls go through here
 
-const BASE = "";  // proxied via vite to localhost:3001
+const BASE = import.meta.env.VITE_API_URL ?? "";  // either env or proxied via vite to localhost:3001 for local developement
 
 export interface SubmitBugPayload {
   rawError: string;
