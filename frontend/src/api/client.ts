@@ -2,6 +2,9 @@
 
 const BASE = import.meta.env.VITE_API_URL ?? ""  // either env or proxied via vite to localhost:3001 for local developement
 
+console.log("🔧 API BASE URL:", BASE || "(empty — using relative URLs)");
+console.log("🔧 All env vars:", import.meta.env);
+
 export interface SubmitBugPayload {
   rawError: string;
   fix: string;
