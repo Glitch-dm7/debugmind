@@ -14,17 +14,35 @@ const http = axios.create({
   timeout: 120_000,
 });
 
-http.interceptors.request.use((config) => {
-  console.log("=== COGNEE CONFIG ===");
-  console.log("BASE_URL:", BASE_URL);
-  console.log("USE_CLOUD:", USE_CLOUD);
-  
+// ── Request interceptor — attach auth based on mode ───────────────────────
+http.interceptors.request.use(async (config) => {
   if (USE_CLOUD) {
     config.headers["X-Api-Key"] = COGNEE_API_KEY;
+  } else {
+    const token = await getToken();
+    config.headers["Authorization"] = `Bearer ${token}`;
   }
-  config.headers["Content-Type"] = config.headers["Content-Type"] ?? "application/json";
+  // Only set Content-Type if not multipart (multipart sets its own boundary)
+  if (!config.headers["Content-Type"]) {
+    config.headers["Content-Type"] = "application/json";
+  }
   return config;
 });
+
+// ── Response interceptor — handle 401 for self-hosted only ────────────────
+http.interceptors.response.use(
+  (res) => res,
+  async (err) => {
+    if (err.response?.status === 401 && !err.config._retry && !USE_CLOUD) {
+      authToken = null;
+      err.config._retry = true;
+      const token = await getToken();
+      err.config.headers["Authorization"] = `Bearer ${token}`;
+      return http(err.config);
+    }
+    return Promise.reject(err);
+  }
+);
 
 // ─── Auth token management ────────────────────────────────────────────────────
 // Token is fetched once on first request and reused for all subsequent calls.
@@ -37,7 +55,6 @@ async function getToken(): Promise<string> {
 
   // Try login first
   try {
-    console.log({COGNEE_EMAIL, COGNEE_PASSWORD})
     const res = await fetch(`${BASE_URL}/api/v1/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -73,28 +90,6 @@ async function getToken(): Promise<string> {
   console.log("=== Cognee auth: registered + logged in as", COGNEE_EMAIL);
   return authToken!;
 }
-
-// Attach token to every axios request automatically
-http.interceptors.request.use(async (config) => {
-  const token = await getToken();
-  config.headers["Authorization"] = `Bearer ${token}`;
-  return config;
-});
-
-// On 401, clear token and retry once (handles token expiry)
-http.interceptors.response.use(
-  (res) => res,
-  async (err) => {
-    if (err.response?.status === 401 && !err.config._retry) {
-      authToken = null;
-      err.config._retry = true;
-      const token = await getToken();
-      err.config.headers["Authorization"] = `Bearer ${token}`;
-      return http(err.config);
-    }
-    return Promise.reject(err);
-  }
-);
 
 // Authenticated fetch for multipart requests
 async function authFetch(url: string, options: RequestInit = {}): Promise<Response> {
