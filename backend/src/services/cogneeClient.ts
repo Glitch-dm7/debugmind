@@ -121,6 +121,12 @@ export async function rememberBug(bug: BugEntry): Promise<string | undefined> {
     body: formData,
   });
 
+  if (USE_CLOUD) {
+    console.log("[API REQUEST] Using CLOUD mode");
+  } else {
+    console.log("[API REQUEST] Using LOCAL/AUTH mode");
+  }
+
   const addBody = await addRes.json().catch(() => ({}));
   if (!addRes.ok) throw new Error(`/api/v1/add failed: ${JSON.stringify(addBody)}`);
 
