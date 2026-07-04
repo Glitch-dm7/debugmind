@@ -10,7 +10,8 @@ import {
   rememberBug,
   recallSimilarBugs,
 } from "./cogneeClient";
-import { bugStore } from "./bugStore.js";
+import { bugStore } from "./bugStore";
+import { projectStore } from "./projectStore";
 
 // ─── Public API of this service ───────────────────────────────────────────────
 
@@ -41,10 +42,10 @@ async function submit(req: SubmitBugRequest): Promise<BugEntry> {
     createdAt: new Date().toISOString(),
   };
 
-  // Save to Cognee (semantic/graph memory)
-  await rememberBug(bug);
+  // remember() returns datasetId from Cognee — capture it for hard delete later
+  const datasetId = await rememberBug(bug);
 
-  // Save metadata locally (structured lookup)
+  // Save bug metadata
   bugStore.save({
     id: bug.id,
     fingerprint: bug.fingerprint,
@@ -58,6 +59,9 @@ async function submit(req: SubmitBugRequest): Promise<BugEntry> {
     denyCount: 0,
   });
 
+  // Register project — upsert so we don't duplicate
+  projectStore.upsert(req.projectId, datasetId);
+
   return bug;
 }
 
@@ -70,9 +74,13 @@ async function recall(
   const normalized = normalizeError(rawError);
   const fingerprint = computeFingerprint(normalized);
 
-  // Step 1: exact fingerprint match — skip Cognee entirely
+  // Step 1: exact fingerprint match
   const exactMatch = bugStore.getByFingerprint(fingerprint);
   if (exactMatch) {
+    const proj = projectStore.getAll().find(p => p.id === exactMatch.projectId);
+    // Don't return results from archived projects
+    if (proj?.archived) return [];
+
     const confidence = {
       confirmCount: exactMatch.confirmCount,
       denyCount: exactMatch.denyCount,
@@ -90,31 +98,30 @@ async function recall(
     }];
   }
 
-  // Step 2: semantic search via Cognee
-  const results = await recallSimilarBugs(normalized, projectId);
+  // Step 2: semantic search — scope to active (non-archived) datasets only
+  const activeProjects = projectStore.getActive();
+  const activeDatasetNames = activeProjects.map(p => `debugmind_${p.id}`);
+
+  // If a specific project is requested, verify it's not archived
+  const searchDatasets = projectId
+    ? activeDatasetNames.filter(n => n === `debugmind_${projectId}`)
+    : activeDatasetNames;
+
+  if (searchDatasets.length === 0) return [];
+
+  const results = await recallSimilarBugs(normalized, searchDatasets);
 
   if (results.length === 0) return [];
 
-  // Step 3: Cognee GRAPH_COMPLETION returns "graph-result-0" as id, not real bug ids.
-  // So we can't match by id — instead find the best local bug by keyword overlap
-  // between the Cognee answer text and our stored bug fixes/errors.
-  const allLocalBugs = bugStore.getAll();
+  const allLocalBugs = bugStore.getAll().filter(b => {
+    const proj = activeProjects.find(p => p.id === b.projectId);
+    return !!proj; // only bugs from active projects
+  });
 
   return results
-    .filter((r) => !r.metadata.archived)
-    .filter((r) => {
-      const text = r.text?.toLowerCase() ?? "";
-      const isEmpty =
-        text.includes("context is empty") ||
-        text.includes("i am sorry") ||
-        text.includes("cannot find similar") ||
-        text.includes("no similar bugs") ||
-        text.trim() === "";
-      return !isEmpty;
-    })
     .map((r) => {
-      // Find best matching local bug by scoring keyword overlap with Cognee's answer
       const cogneeAnswer = r.text?.toLowerCase() ?? "";
+
       const bestLocal = allLocalBugs
         .map((bug) => {
           const score = keywordOverlapScore(
@@ -131,13 +138,11 @@ async function recall(
         confirmCount: local?.confirmCount ?? 0,
         denyCount: local?.denyCount ?? 0,
       };
-      const similarity = r.score;
-      const displayScore = computeDisplayScore(similarity, confidence);
 
       return {
         bugId: local?.id ?? r.id,
-        similarity,
-        displayScore,
+        similarity: r.score,
+        displayScore: computeDisplayScore(r.score, confidence),
         normalizedError: normalized,
         fix: r.text?.trim() ?? local?.fix ?? "No similar bugs found",
         language: local?.language ?? "unknown",

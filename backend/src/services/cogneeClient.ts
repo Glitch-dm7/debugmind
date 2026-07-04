@@ -98,69 +98,69 @@ async function authFetch(url: string, options: RequestInit = {}): Promise<Respon
 // ─── remember() ──────────────────────────────────────────────────────────────
 // Uses /api/v1/add + /api/v1/cognify separately (the reliable path).
 // /api/v1/remember causes 409 conflicts when the dataset already exists.
-export async function rememberBug(bug: BugEntry): Promise<void> {
+export async function rememberBug(bug: BugEntry): Promise<string | undefined> {
   const document = formatBugAsDocument(bug);
   const datasetName = `debugmind_${bug.projectId}`;
-
-  console.log("=== Sending to /api/v1/add ===");
 
   const formData = new FormData();
   const fileBlob = new Blob([document], { type: "text/plain" });
   formData.append("data", fileBlob, `bug_${bug.id}.txt`);
   formData.append("datasetName", datasetName);
 
-  const addRes = await authFetch(`${BASE_URL}/api/v1/add`, {  // ← authFetch
+  const addRes = await fetch(`${BASE_URL}/api/v1/add`, {
     method: "POST",
     body: formData,
   });
 
   const addBody = await addRes.json().catch(() => ({}));
-  console.log("=== /api/v1/add response ===", addRes.status, addBody);
+  if (!addRes.ok) throw new Error(`/api/v1/add failed: ${JSON.stringify(addBody)}`);
 
-  if (!addRes.ok) {
-    throw new Error(`/api/v1/add failed: ${JSON.stringify(addBody)}`);
-  }
+  const datasetId = addBody?.dataset_id as string | undefined;
 
-  const datasetId = addBody?.dataset_id;
-  const cognifyRes = await authFetch(`${BASE_URL}/api/v1/cognify`, {  // ← authFetch
+  const cognifyRes = await fetch(`${BASE_URL}/api/v1/cognify`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ datasets: [datasetName] }),
   });
 
   const cognifyBody = await cognifyRes.json().catch(() => ({}));
-  console.log("=== /api/v1/cognify response ===", cognifyRes.status, cognifyBody);
+  if (!cognifyRes.ok) throw new Error(`/api/v1/cognify failed: ${JSON.stringify(cognifyBody)}`);
 
-  if (!cognifyRes.ok) {
-    throw new Error(`/api/v1/cognify failed: ${JSON.stringify(cognifyBody)}`);
-  }
+  return datasetId; // ← return to bugService so it can be stored in projectStore
 }
 
 // ─── recall() ────────────────────────────────────────────────────────────────
 export async function recallSimilarBugs(
   normalizedError: string,
-  projectId?: string
+  datasetNames?: string[]  // ← now accepts array of names to scope search
 ): Promise<CogneeSearchResult[]> {
   const query = `Find similar bugs and their fixes for this error: ${normalizedError}`;
 
-  const response = await http.post("/api/v1/search", {
+  const body: Record<string, unknown> = {
     query,
     search_type: "GRAPH_COMPLETION",
-  });
+  };
 
+  // Scope search to specific datasets if provided
+  if (datasetNames && datasetNames.length > 0) {
+    body.datasets = datasetNames;
+  }
+
+  const response = await http.post("/api/v1/search", body);
   const raw = response.data;
 
-  // GRAPH_COMPLETION returns a string narrative — extract the fix from it directly
+  console.log("=== RAW TYPE ===", typeof raw);
+  console.log("=== RAW DATA ===", JSON.stringify(raw, null, 2));
+
   if (Array.isArray(raw) && typeof raw[0] === "string" && raw[0].trim()) {
     return [{
       id: "graph-result-0",
       score: 0.7,
-      metadata: { projectId },
-      text: raw[0], // ← the actual answer is raw[0]
+      metadata: {},
+      text: raw[0],
     }];
   }
 
-  // Handle array or { results: [] } shapes
   const results: RawCogneeResult[] = Array.isArray(raw)
     ? raw
     : Array.isArray(raw?.results)
@@ -172,7 +172,7 @@ export async function recallSimilarBugs(
     score: r.score ?? r.similarity_score ?? 0.7,
     metadata: {
       fingerprint: r.metadata?.fingerprint,
-      projectId: r.metadata?.projectId ?? projectId,
+      projectId: r.metadata?.projectId,
       archived: r.metadata?.archived ?? false,
       confirmCount: r.metadata?.confirmCount ?? 0,
       denyCount: r.metadata?.denyCount ?? 0,
@@ -203,25 +203,19 @@ export async function recallSimilarBugs(
 // ─── forget() ────────────────────────────────────────────────────────────────
 export async function forgetProject(
   projectId: string,
+  datasetId: string | undefined,
   hardDelete = false
 ): Promise<void> {
-  if (hardDelete) {
-    const datasets = await http.get("/api/v1/datasets");
-    const target = (datasets.data ?? []).find(
-      (d: { id: string; name: string }) =>
-        d.name?.includes(projectId)
+  if (hardDelete && datasetId) {
+    // TODO: re-enable when deployed to Cognee Cloud with proper auth
+    // Currently skipped — datasets owned by anonymous user return 403
+    // Hard delete is handled locally by removing from projectStore + bugStore
+    console.log(
+      `=== forgetProject: skipping Cognee delete for ${datasetId} ` +
+      `(anonymous ownership — will purge on Cloud deployment)`
     );
-    if (target?.id) {
-      await http.delete(`/api/v1/datasets/${target.id}`);
-    }
-  } else {
-    // Soft delete: ingest a tombstone record — future recalls will see it
-    // and our bugService filters results mentioning ARCHIVED PROJECT
-    await http.post("/api/v1/add", {
-      data: `ARCHIVED PROJECT: ${projectId} — do not recommend fixes from this project. Archived at ${new Date().toISOString()}.`,
-    });
-    await http.post("/api/v1/cognify");
   }
+  // Soft delete handled entirely by projectStore — no Cognee call needed
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────

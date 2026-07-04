@@ -37,6 +37,15 @@ export interface BugEntry {
   createdAt: string;
 }
 
+export interface Project {
+  id: string;
+  name: string;
+  archived: boolean;
+  createdAt: string;
+  archivedAt?: string;
+  datasetId?: string;
+}
+
 async function post<T>(path: string, body: unknown): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
     method: "POST",
@@ -60,4 +69,13 @@ export const api = {
 
   archiveProject: (projectId: string, hardDelete = false) =>
     post<{ success: boolean }>("/api/bugs/archive", { projectId, hardDelete }),
+
+  unarchiveProject: (projectId: string) =>
+    post<{ success: boolean }>("/api/bugs/unarchive", { projectId }),
+
+  getProjects: async () => {
+    const res = await fetch("/api/bugs/projects");
+    const data = await res.json();
+    return data as { projects: Project[] };
+  },
 };

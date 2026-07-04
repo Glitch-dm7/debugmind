@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { Search, Plus } from "lucide-react";
+import { Search, Plus, FolderOpen } from "lucide-react";
 import { RecallPanel } from "../components/RecallPanel";
 import { SubmitPanel } from "../components/SubmitPanel";
+import { ProjectsPanel } from "../components/ProjectsPanel";
 
-type Tab = "recall" | "submit";
+type Tab = "recall" | "submit" | "projects" ;
 
 export default function BugsPage() {
   const [tab, setTab] = useState<Tab>("recall");
@@ -36,6 +37,18 @@ export default function BugsPage() {
           >
             <Plus size={13} />
             log a bug
+          </button>
+          <button
+            onClick={() => setTab("projects")}
+            className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left
+                      font-mono text-xs transition-all duration-150
+                      ${tab === "projects"
+                        ? "bg-cyan-glow border border-cyan/20 text-cyan"
+                        : "text-text-muted hover:text-text-primary hover:bg-surface"
+                      }`}
+          >
+            <FolderOpen size={13} />
+            projects
           </button>
         </nav>
 
@@ -71,6 +84,15 @@ export default function BugsPage() {
           <Plus size={16} />
           log bug
         </button>
+        <button
+          onClick={() => setTab("projects")}
+          className={`flex-1 flex flex-col items-center gap-1 py-3
+                    font-mono text-[10px] transition-colors
+                    ${tab === "projects" ? "text-cyan" : "text-text-muted"}`}
+        >
+          <FolderOpen size={16} />
+          projects
+        </button>
       </div>
 
       {/* Content area */}
@@ -78,19 +100,25 @@ export default function BugsPage() {
         <div className="px-6 py-4 border-b border-border flex items-center justify-between">
           <div>
             <h1 className="font-mono text-sm font-semibold text-text-primary">
-              {tab === "recall" ? "have i seen this bug before?" : "log a new bug"}
+              {tab === "recall"   ? "have i seen this bug before?" :
+              tab === "submit"   ? "log a new bug" :
+              "manage projects"}
             </h1>
             <p className="text-xs text-text-muted mt-0.5">
               {tab === "recall"
-                ? "paste a stack trace \u2014 memory searches graph + vector similarity"
-                : "describe the error and fix \u2014 cognee builds a knowledge graph entry"
+                ? "paste a stack trace — memory searches graph + vector similarity"
+                : tab === "submit"
+                ? "describe the error and fix — cognee builds a knowledge graph entry"
+                : "archive retired projects — excluded from future recall"
               }
             </p>
           </div>
         </div>
 
         <div className="flex-1 overflow-hidden">
-          {tab === "recall" ? <RecallPanel /> : <SubmitPanel />}
+          {tab === "recall"   ? <RecallPanel />   :
+          tab === "submit"   ? <SubmitPanel />   :
+          <ProjectsPanel />}
         </div>
       </div>
     </>

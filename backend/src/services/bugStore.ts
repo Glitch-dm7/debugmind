@@ -106,4 +106,10 @@ export const bugStore = {
   getAll(): StoredBug[] {
     return Object.values(load());
   },
+
+  deleteById(id: string): void {
+    const store = load();
+    delete store[id];
+    save(store);
+  },
 };

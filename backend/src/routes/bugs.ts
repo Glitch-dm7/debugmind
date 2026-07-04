@@ -7,6 +7,8 @@ import type {
   FeedbackRequest,
   ArchiveProjectRequest,
 } from "../types/index.ts";
+import { projectStore } from "@/services/projectStore";
+import { bugStore } from "@/services/bugStore";
 
 export const bugsRouter = new Hono();
 
@@ -50,6 +52,11 @@ bugsRouter.post("/feedback", async (c) => {
   return c.json({ success: true }, 200);
 });
 
+bugsRouter.get("/projects", (c) => {
+  const projects = projectStore.getAll();
+  return c.json({ projects }, 200);
+});
+
 // POST /bugs/archive — forget() a project (soft or hard delete)
 bugsRouter.post("/archive", async (c) => {
   const body = await c.req.json<ArchiveProjectRequest>();
@@ -58,6 +65,40 @@ bugsRouter.post("/archive", async (c) => {
     return c.json({ error: "projectId is required" }, 400);
   }
 
-  await forgetProject(body.projectId, body.hardDelete ?? false);
-  return c.json({ success: true, hardDelete: body.hardDelete ?? false }, 200);
+  const projects = projectStore.getAll();
+  const project = projects.find((p) => p.id === body.projectId);
+
+  if (!project) {
+    return c.json({ error: `Project ${body.projectId} not found` }, 404);
+  }
+
+  // Call Cognee for hard delete
+  await forgetProject(body.projectId, project.datasetId, body.hardDelete ?? false);
+
+  if (body.hardDelete) {
+    projectStore.delete(body.projectId);
+
+    // Also remove all bugs for this project from local store
+    const allBugs = bugStore.getAll();
+    allBugs
+      .filter((b) => b.projectId === body.projectId)
+      .forEach((b) => bugStore.deleteById(b.id));
+  }
+
+  return c.json({
+    success: true,
+    projectId: body.projectId,
+    hardDelete: body.hardDelete ?? false,
+  }, 200);
+});
+
+// POST /bugs/unarchive — restore a soft-deleted project
+bugsRouter.post("/unarchive", async (c) => {
+  const body = await c.req.json<{ projectId: string }>();
+  if (!body.projectId) return c.json({ error: "projectId is required" }, 400);
+
+  const project = projectStore.unarchive(body.projectId);
+  if (!project) return c.json({ error: "Project not found" }, 404);
+
+  return c.json({ success: true, project }, 200);
 });

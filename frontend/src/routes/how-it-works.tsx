@@ -84,10 +84,10 @@ export default function HowItWorksPage() {
     <div className="flex-1 overflow-y-auto">
       {/* ── Hero ── */}
       <section className="relative px-6 pt-24 pb-16 overflow-hidden">
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(34,211,238,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(34,211,238,0.03)_1px,transparent_1px)] bg-[size:64px_64px]" />
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(34,211,238,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(34,211,238,0.03)_1px,transparent_1px)] bg-size-[64px_64px]" />
 
         <motion.div
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-cyan/3 blur-[160px]"
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-150 h-150 rounded-full bg-cyan/3 blur-[160px]"
           animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.5, 0.3] }}
           transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
         />
@@ -114,7 +114,7 @@ export default function HowItWorksPage() {
           </motion.h1>
 
           <motion.p
-            className="text-base text-text-muted font-mono max-w-2xl mx-auto leading-relaxed"
+            className="text-base font-mono max-w-2xl mx-auto leading-relaxed"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
