@@ -177,8 +177,11 @@ export async function recallSimilarBugs(
   if (Array.isArray(raw) && raw[0]?.search_result !== undefined) {
     const validResults = raw
       .filter((r: any) => {
-        const text = r.search_result?.[0] ?? "";
-        return text.trim() && !isNegativeResult(text);
+        const text = r.search_result?.[0]?.trim();
+
+        if (!text) return false;
+
+        return !isNegativeResult(text);
       })
       .map((r: any, i: number) => ({
         id: `graph-result-${i}`,
@@ -187,7 +190,7 @@ export async function recallSimilarBugs(
         text: r.search_result[0],
       }));
 
-    return validResults.slice(0, 2); // top 2 valid results max
+    return validResults.slice(0, 2);
   }
   
   // Case 2: self-hosted — returns string[]
@@ -304,17 +307,23 @@ function formatBugAsDocument(bug: BugEntry): string {
 
 function isNegativeResult(text: string): boolean {
   const lower = text.toLowerCase();
-  return (
-    lower.includes("no analogous") ||
-    lower.includes("no similar bugs") ||
-    lower.includes("no directly similar") ||
-    lower.includes("knowledge-graph you provided contains only") ||
-    lower.includes("within the supplied context there are no") ||
-    lower.includes("i am sorry") ||
-    lower.includes("cannot find similar") ||
-    lower.includes("search_result") && lower.includes("[]") ||
-    text.trim() === "" ||
-    text.trim() === "[]"
+
+  const negativePatterns = [
+    "there are no",
+    "no rust-related entries",
+    "no rust-specific entries",
+    "no similar bugs",
+    "no analogous",
+    "cannot extract",
+    "cannot list",
+    "knowledge graph contains only",
+    "i cannot",
+    "not found",
+    "no entries",
+  ];
+
+  return negativePatterns.some(pattern =>
+    lower.includes(pattern)
   );
 }
 
