@@ -9,6 +9,8 @@ import type {
 } from "../types/index.ts";
 import { projectStore } from "@/services/projectStore";
 import { bugStore } from "@/services/bugStore";
+import path from "path";
+import fs from "fs/promises";
 
 export const bugsRouter = new Hono();
 
@@ -101,4 +103,43 @@ bugsRouter.post("/unarchive", async (c) => {
   if (!project) return c.json({ error: "Project not found" }, 404);
 
   return c.json({ success: true, project }, 200);
+});
+
+bugsRouter.post("/bugs-projects-file-check", async (c) => {
+  try {
+
+    // adjust paths according to your structure
+    const bugsFilePath = path.resolve("bugs.json");
+    const projectsFilePath = path.resolve("projects.json");
+
+    // read files
+    const bugsContent = await fs.readFile(bugsFilePath, "utf-8");
+    const projectsContent = await fs.readFile(projectsFilePath, "utf-8");
+
+    // parse json
+    const bugsJson = JSON.parse(bugsContent);
+    const projectsJson = JSON.parse(projectsContent);
+
+    // logs visible in Render logs/CLI
+    console.log("========== BUGS.JSON ==========");
+    console.log(JSON.stringify(bugsJson, null, 2));
+
+    console.log("========== PROJECTS.JSON ==========");
+    console.log(JSON.stringify(projectsJson, null, 2));
+
+    return c.json({
+      success: true,
+      message: "Files logged successfully",
+    });
+  } catch (error : any) {
+    console.error("FILE CHECK ERROR:", error);
+
+    return c.json(
+      {
+        success: false,
+        error: error?.message || "",
+      },
+      500
+    );
+  }
 });
