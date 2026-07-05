@@ -119,3 +119,13 @@ Each fix is ranked by `displayScore = similarity × wilsonScoreLowerBound`:
 | 50✓ / 50 | 100%        | 93%          |
 
 Wilson's lower bound (95% CI) prevents overconfidence on small sample sizes.
+
+---
+
+## Built With
+
+This project was developed with assistance from:
+
+- OpenCode — agentic coding CLI
+- Google Gemini 2.5 Flash — Cognee LLM
+- Anthropic Claude — code generation & architecture
