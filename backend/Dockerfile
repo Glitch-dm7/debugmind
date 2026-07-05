@@ -9,8 +9,11 @@ RUN bun install --frozen-lockfile
 COPY src/ ./src/
 COPY tsconfig.json ./
 
-# Create data directory for bugs.json
-RUN mkdir -p /app/data
+# # Create data directory for bugs.json
+# RUN mkdir -p /app/data
+
+# Copy data folder
+COPY data/ ./data/
 
 EXPOSE 10000
 
