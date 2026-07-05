@@ -150,6 +150,12 @@ async function recall(
         denyCount: local?.denyCount ?? 0,
       };
 
+      const projectIdFromCognee = r.metadata.projectId ?? projectId;
+      const bugsFromSameProject = allLocalBugs.filter(
+        b => b.projectId === projectIdFromCognee
+      );
+      const inferredLanguage = bugsFromSameProject[0]?.language ?? "unknown";
+
       return {
         bugId: local?.id ?? r.id,
         similarity: r.score,
@@ -157,7 +163,7 @@ async function recall(
         normalizedError: normalized,
         fix: r.text?.trim() ?? local?.fix ?? "No similar bugs found",
         // Use Cognee Cloud's dataset_name first, then local, then unknown
-        language: local?.language ?? "unknown",
+        language: local?.language ?? inferredLanguage,
         projectId: local?.projectId ?? r.metadata.projectId ?? projectId ?? "unknown",
         confidence,
         lastConfirmedAt: local?.lastConfirmedAt,
