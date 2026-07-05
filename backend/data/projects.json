@@ -1,0 +1,30 @@
+{
+  "proj-alpha": {
+    "id": "proj-alpha",
+    "name": "proj-alpha",
+    "datasetId": "d0f29156-3d3a-5852-9cd6-dbec02a9342f",
+    "archived": false,
+    "createdAt": "2026-07-05T08:47:43.481Z"
+  },
+  "proj-beta": {
+    "id": "proj-beta",
+    "name": "proj-beta",
+    "datasetId": "a2f15fcb-b513-504b-b6bf-c56356f02e30",
+    "archived": false,
+    "createdAt": "2026-07-05T08:49:52.411Z"
+  },
+  "proj-gamma": {
+    "id": "proj-gamma",
+    "name": "proj-gamma",
+    "datasetId": "0054c37b-9939-5b3d-8814-73bbe72fc276",
+    "archived": false,
+    "createdAt": "2026-07-05T08:51:52.366Z"
+  },
+  "proj-delta": {
+    "id": "proj-delta",
+    "name": "proj-delta",
+    "datasetId": "ccf9161f-d0e2-57a6-b91d-25378da1a2a6",
+    "archived": false,
+    "createdAt": "2026-07-05T08:53:31.166Z"
+  }
+}

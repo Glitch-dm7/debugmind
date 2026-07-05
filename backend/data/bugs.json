@@ -1,0 +1,362 @@
+{
+  "ba02842b-8e1d-42f3-9df5-75aeda88799c": {
+    "id": "ba02842b-8e1d-42f3-9df5-75aeda88799c",
+    "fingerprint": "3d04156518c123f86196d5d573d0ecd0",
+    "language": "typescript",
+    "framework": "react",
+    "projectId": "proj-alpha",
+    "tags": [
+      "undefined",
+      "map",
+      "react",
+      "hooks",
+      "initial-state"
+    ],
+    "fix": "The projects array was undefined on first render. Added optional chaining: projects?.map() and initialized state with useState<Project[]>([]) instead of useState(null).",
+    "createdAt": "2026-07-05T08:47:26.957Z",
+    "confirmCount": 0,
+    "denyCount": 0
+  },
+  "3b9f6243-459e-4397-b7ac-d922ba4e8b5b": {
+    "id": "3b9f6243-459e-4397-b7ac-d922ba4e8b5b",
+    "fingerprint": "ee7af83607e32509fa7d491ffe4a60ad",
+    "language": "typescript",
+    "framework": "react",
+    "projectId": "proj-alpha",
+    "tags": [
+      "null",
+      "ref",
+      "useEffect",
+      "event-listener",
+      "dom"
+    ],
+    "fix": "The ref was null on first render because the DOM element hadn't mounted yet. Wrapped the addEventListener call in a null check: if (element) element.addEventListener(...). Also added cleanup in the useEffect return.",
+    "createdAt": "2026-07-05T08:47:48.728Z",
+    "confirmCount": 0,
+    "denyCount": 0
+  },
+  "0c655069-7795-4719-abb9-b15179add036": {
+    "id": "0c655069-7795-4719-abb9-b15179add036",
+    "fingerprint": "d296c2850cbbab3d441567a4b0b82dfb",
+    "language": "typescript",
+    "framework": "react",
+    "projectId": "proj-alpha",
+    "tags": [
+      "infinite-loop",
+      "re-render",
+      "setState",
+      "useEffect",
+      "react"
+    ],
+    "fix": "setState was being called directly in the render body instead of inside a useEffect. Moved the state update inside useEffect with the correct dependency array: useEffect(() => { setUser(props.user) }, [props.user]).",
+    "createdAt": "2026-07-05T08:48:10.352Z",
+    "confirmCount": 0,
+    "denyCount": 0
+  },
+  "e5b60f00-68a3-4979-ba31-dee0d875fe5e": {
+    "id": "e5b60f00-68a3-4979-ba31-dee0d875fe5e",
+    "fingerprint": "cc3a8ce3f6bb921460a8d2bad00e6e96",
+    "language": "typescript",
+    "framework": "react",
+    "projectId": "proj-alpha",
+    "tags": [
+      "401",
+      "auth",
+      "jwt",
+      "axios",
+      "interceptor"
+    ],
+    "fix": "The JWT token was expired but we weren't catching 401s globally. Added an Axios response interceptor that checks for 401, clears localStorage, and redirects to /login. Also added token refresh logic before expiry using a setTimeout.",
+    "createdAt": "2026-07-05T08:48:31.610Z",
+    "confirmCount": 0,
+    "denyCount": 0
+  },
+  "b4d64691-523b-4adc-9c3b-92ba7350e1e6": {
+    "id": "b4d64691-523b-4adc-9c3b-92ba7350e1e6",
+    "fingerprint": "40b29260ff54ebf7fe214b56a1d6f21f",
+    "language": "typescript",
+    "framework": "react",
+    "projectId": "proj-alpha",
+    "tags": [
+      "destructure",
+      "undefined",
+      "context",
+      "auth",
+      "loading-state"
+    ],
+    "fix": "The user object from context was undefined during initial load before the auth check completed. Added a loading state to AuthContext and rendered a skeleton/null in Header while loading: const { user, loading } = useAuth(); if (loading) return null;",
+    "createdAt": "2026-07-05T08:48:52.079Z",
+    "confirmCount": 0,
+    "denyCount": 0
+  },
+  "f3ce5284-5f4b-4a1e-9e6b-54580bbbe2f1": {
+    "id": "f3ce5284-5f4b-4a1e-9e6b-54580bbbe2f1",
+    "fingerprint": "c1d7bf431d46e96447adf92c48de2251",
+    "language": "python",
+    "framework": "fastapi",
+    "projectId": "proj-beta",
+    "tags": [
+      "postgres",
+      "connection-pool",
+      "sqlalchemy",
+      "max-connections",
+      "db"
+    ],
+    "fix": "Hit PostgreSQL's max_connections limit. The SQLAlchemy engine was creating a new connection pool per request instead of being shared. Moved engine creation to a module-level singleton and configured pool_size=10, max_overflow=20. Also added connection pooling via PgBouncer in staging.",
+    "createdAt": "2026-07-05T08:49:15.145Z",
+    "confirmCount": 0,
+    "denyCount": 0
+  },
+  "b27aa9ca-629a-4883-a2e6-cec9c149a990": {
+    "id": "b27aa9ca-629a-4883-a2e6-cec9c149a990",
+    "fingerprint": "93287fc971c82ddddcd36e1b4a3187bd",
+    "language": "python",
+    "framework": "fastapi",
+    "projectId": "proj-beta",
+    "tags": [
+      "pydantic",
+      "validation",
+      "email",
+      "422",
+      "dependencies"
+    ],
+    "fix": "The email field in the Pydantic model used EmailStr but pydantic[email] extra wasn't installed. Ran: pip install pydantic[email]. Also added a try/except around the endpoint to return a proper 422 with the validation error details instead of a 500.",
+    "createdAt": "2026-07-05T08:49:57.638Z",
+    "confirmCount": 0,
+    "denyCount": 0
+  },
+  "fccaab16-4e7b-4257-aa37-81257812d88d": {
+    "id": "fccaab16-4e7b-4257-aa37-81257812d88d",
+    "fingerprint": "9f615ac2c3357a530a4720fb25d81f6b",
+    "language": "python",
+    "framework": "fastapi",
+    "projectId": "proj-beta",
+    "tags": [
+      "async",
+      "timeout",
+      "smtp",
+      "background-tasks",
+      "email"
+    ],
+    "fix": "The SMTP server was taking longer than 5s during peak load. Increased timeout to 30s and moved email sending to a background task using FastAPI's BackgroundTasks so it doesn't block the HTTP response. The welcome email now sends after the 201 response is returned.",
+    "createdAt": "2026-07-05T08:50:19.368Z",
+    "confirmCount": 0,
+    "denyCount": 0
+  },
+  "ed717c06-750f-4436-9c8b-96ff96d362a3": {
+    "id": "ed717c06-750f-4436-9c8b-96ff96d362a3",
+    "fingerprint": "ea5ab6bf46d8b75211947eb11a8adbb6",
+    "language": "python",
+    "framework": "fastapi",
+    "projectId": "proj-beta",
+    "tags": [
+      "recursion",
+      "sqlalchemy",
+      "self-referential",
+      "repr",
+      "orm"
+    ],
+    "fix": "The Category model had a self-referential relationship (parent/children) and the __repr__ method was calling itself recursively through the relationship. Fixed by limiting __repr__ to only scalar fields: return f'Category(id={self.id}, name={self.name})' without traversing relationships.",
+    "createdAt": "2026-07-05T08:50:43.134Z",
+    "confirmCount": 0,
+    "denyCount": 0
+  },
+  "bd4c16d7-42bc-4d29-895c-468405bf1932": {
+    "id": "bd4c16d7-42bc-4d29-895c-468405bf1932",
+    "fingerprint": "f643583c6653757a55dee2ce581c24aa",
+    "language": "python",
+    "framework": "fastapi",
+    "projectId": "proj-beta",
+    "tags": [
+      "jwt",
+      "expired",
+      "401",
+      "refresh-token",
+      "auth"
+    ],
+    "fix": "JWT tokens were expiring but the frontend wasn't refreshing them. Added a /auth/refresh endpoint that accepts a long-lived refresh token and issues a new access token. Also fixed the token expiry check to return 401 instead of 500 so the frontend interceptor could handle it.",
+    "createdAt": "2026-07-05T08:51:04.101Z",
+    "confirmCount": 0,
+    "denyCount": 0
+  },
+  "442dba02-2c25-47fc-b20d-b0c32f8464c3": {
+    "id": "442dba02-2c25-47fc-b20d-b0c32f8464c3",
+    "fingerprint": "2a2527084d9174c3125c868cd9b98448",
+    "language": "go",
+    "framework": "gin",
+    "projectId": "proj-gamma",
+    "tags": [
+      "nil-pointer",
+      "panic",
+      "segfault",
+      "db-query",
+      "error-handling"
+    ],
+    "fix": "The db query returned nil when no user was found but we dereferenced the result without checking. Added a nil check after the query: if user == nil { return nil, ErrUserNotFound }. Also updated the handler to return 404 instead of panicking.",
+    "createdAt": "2026-07-05T08:51:35.717Z",
+    "confirmCount": 0,
+    "denyCount": 0
+  },
+  "d1e63b8b-d094-4915-86b8-cddba4d6a80a": {
+    "id": "d1e63b8b-d094-4915-86b8-cddba4d6a80a",
+    "fingerprint": "b56a55c9f64c00a65955bd92fbe24c36",
+    "language": "go",
+    "framework": "gin",
+    "projectId": "proj-gamma",
+    "tags": [
+      "goroutine-leak",
+      "channel",
+      "context",
+      "cancellation",
+      "concurrency"
+    ],
+    "fix": "Worker goroutines were blocking on channel receive with no timeout or cancellation. Fixed by passing a context with cancellation to each worker and selecting on both the job channel and ctx.Done(). Added defer wg.Done() to ensure WaitGroup is always decremented.",
+    "createdAt": "2026-07-05T08:51:57.598Z",
+    "confirmCount": 0,
+    "denyCount": 0
+  },
+  "1418ccaf-0a2d-4fb6-ac74-235606a42f68": {
+    "id": "1418ccaf-0a2d-4fb6-ac74-235606a42f68",
+    "fingerprint": "a2e701b88ec8a0c6e69348cdc30b7dde",
+    "language": "go",
+    "framework": "gin",
+    "projectId": "proj-gamma",
+    "tags": [
+      "db",
+      "connection-refused",
+      "docker",
+      "startup",
+      "retry"
+    ],
+    "fix": "The app was starting before the database container was ready in Docker Compose. Added a retry loop with exponential backoff in initDB(): retry up to 10 times with 2s delay, doubling each attempt. Also added depends_on with health check condition in docker-compose.yml.",
+    "createdAt": "2026-07-05T08:52:24.310Z",
+    "confirmCount": 0,
+    "denyCount": 0
+  },
+  "256b0f96-242f-4a91-b711-37f7870dca93": {
+    "id": "256b0f96-242f-4a91-b711-37f7870dca93",
+    "fingerprint": "e0a23804f225626f015069b4fce5bb71",
+    "language": "go",
+    "framework": "gin",
+    "projectId": "proj-gamma",
+    "tags": [
+      "json",
+      "type-mismatch",
+      "unmarshal",
+      "validation",
+      "api"
+    ],
+    "fix": "The client was sending price as a string (\"1999\") but the Go struct expected int64. Fixed the struct tag to use json.Number and parse it explicitly, or updated the API contract to always send numeric types. Added input validation middleware to catch type mismatches early.",
+    "createdAt": "2026-07-05T08:52:54.719Z",
+    "confirmCount": 0,
+    "denyCount": 0
+  },
+  "e2546803-f382-447b-b70b-feb114a06c2c": {
+    "id": "e2546803-f382-447b-b70b-feb114a06c2c",
+    "fingerprint": "7d9f1be815fe61e8c8c6bc06b919a3d6",
+    "language": "javascript",
+    "framework": "express",
+    "projectId": "proj-delta",
+    "tags": [
+      "mongodb",
+      "mongoose",
+      "connection-refused",
+      "env",
+      "database"
+    ],
+    "fix": "MongoDB wasn't running or the connection string was wrong. Added MONGODB_URI to .env and used process.env.MONGODB_URI in the connection string. Also added mongoose connection event listeners for 'connected', 'error', and 'disconnected' to improve observability, and wrapped connection in a try/catch.",
+    "createdAt": "2026-07-05T08:53:12.740Z",
+    "confirmCount": 0,
+    "denyCount": 0
+  },
+  "04ddab32-7b35-4ab5-957c-fc7b194a8c14": {
+    "id": "04ddab32-7b35-4ab5-957c-fc7b194a8c14",
+    "fingerprint": "1934496ec48bb27467bd4e5528f43312",
+    "language": "javascript",
+    "framework": "express",
+    "projectId": "proj-delta",
+    "tags": [
+      "headers-sent",
+      "express",
+      "middleware",
+      "response",
+      "error-handler"
+    ],
+    "fix": "The route handler was calling res.json() and then calling next(err) after, causing headers to be sent twice. Fixed by adding return before every res.json() call and removing the next(err) call after a response was already sent. Added a check: if (res.headersSent) return;",
+    "createdAt": "2026-07-05T08:53:35.123Z",
+    "confirmCount": 0,
+    "denyCount": 0
+  },
+  "187d0455-4dea-4441-b00c-0b7dbff43451": {
+    "id": "187d0455-4dea-4441-b00c-0b7dbff43451",
+    "fingerprint": "427076eb8166c16ea5a92c4674647698",
+    "language": "javascript",
+    "framework": "express",
+    "projectId": "proj-delta",
+    "tags": [
+      "413",
+      "payload-too-large",
+      "body-parser",
+      "upload",
+      "limit"
+    ],
+    "fix": "The default Express body-parser limit is 100kb. Our endpoint was receiving base64-encoded images. Fixed by increasing the limit: app.use(express.json({ limit: '10mb' })). Long-term fix: moved image uploads to multipart/form-data with multer and stored in S3 instead of base64 in JSON.",
+    "createdAt": "2026-07-05T08:54:06.650Z",
+    "confirmCount": 0,
+    "denyCount": 0
+  },
+  "80247676-5894-4fc9-b816-4d117fc7f30e": {
+    "id": "80247676-5894-4fc9-b816-4d117fc7f30e",
+    "fingerprint": "b5bd590fba321bce26b8905feeeaea98",
+    "language": "javascript",
+    "framework": "express",
+    "projectId": "proj-delta",
+    "tags": [
+      "circular-dependency",
+      "require",
+      "initialization",
+      "modules",
+      "routing"
+    ],
+    "fix": "Circular dependency between routes/users.js and middleware/auth.js — each was requiring the other at the top level. Fixed by moving the auth middleware require inside the route handler function instead of at module level, breaking the circular reference.",
+    "createdAt": "2026-07-05T08:54:32.788Z",
+    "confirmCount": 0,
+    "denyCount": 0
+  },
+  "ad2fcb11-a40f-436c-a316-470f350739f9": {
+    "id": "ad2fcb11-a40f-436c-a316-470f350739f9",
+    "fingerprint": "177a6ecbbcc2ad6b464865aecf1d9fe4",
+    "language": "javascript",
+    "framework": "express",
+    "projectId": "proj-delta",
+    "tags": [
+      "validation",
+      "joi",
+      "400",
+      "middleware",
+      "error-handling"
+    ],
+    "fix": "The Joi validation error was being thrown but not caught in the route handler, causing an unhandled rejection. Added a validateRequest middleware that wraps Joi validation in try/catch and returns a structured 400 response with the validation error details. Applied it to all POST/PUT routes.",
+    "createdAt": "2026-07-05T08:54:55.541Z",
+    "confirmCount": 0,
+    "denyCount": 0
+  },
+  "ee26e83c-b890-43d3-83d1-cd366ded6c70": {
+    "id": "ee26e83c-b890-43d3-83d1-cd366ded6c70",
+    "fingerprint": "3db23b587f633deee3dbc769894b5cdd",
+    "language": "javascript",
+    "framework": "express",
+    "projectId": "proj-delta",
+    "tags": [
+      "enoent",
+      "file-not-found",
+      "uploads",
+      "docker",
+      "filesystem"
+    ],
+    "fix": "The uploads directory didn't exist in the production container (only in local dev). Added a startup check: if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true }). Also added the uploads directory to .dockerignore but pre-created it in the Dockerfile with RUN mkdir -p /app/uploads.",
+    "createdAt": "2026-07-05T08:55:19.903Z",
+    "confirmCount": 0,
+    "denyCount": 0
+  }
+}
