@@ -107,32 +107,30 @@ bugsRouter.post("/unarchive", async (c) => {
 
 bugsRouter.get("/bugs-projects-file-check", async (c) => {
   try {
-    // current working directory
-    console.log("CURRENT WORKING DIRECTORY:");
-    console.log(process.cwd());
+    // absolute path to data folder
+    const dataFolderPath = path.resolve("data");
 
-    // list all files/folders in root
-    const rootFiles = await fs.readdir(process.cwd());
+    console.log("========== DATA FOLDER PATH ==========");
+    console.log(dataFolderPath);
 
-    console.log("========== ROOT FILES ==========");
-    console.log(rootFiles);
+    // list files inside data folder
+    const dataFiles = await fs.readdir(dataFolderPath);
 
-    // optional: recursively inspect app folder
-    // const appPath = path.resolve("app");
+    console.log("========== DATA FOLDER FILES ==========");
+    console.log(dataFiles);
 
-    // try {
-    //   const appFiles = await fs.readdir(appPath);
+    // optional: read bugs.json
+    const bugsFilePath = path.resolve("data/bugs.json");
 
-    //   console.log("========== APP FILES ==========");
-    //   console.log(appFiles);
-    // } catch (err) {
-    //   console.log("NO APP DIRECTORY FOUND");
-    // }
+    const bugsContent = await fs.readFile(bugsFilePath, "utf-8");
+
+    console.log("========== BUGS.JSON CONTENT ==========");
+    console.log(bugsContent);
 
     return c.json({
       success: true,
-      cwd: process.cwd(),
-      rootFiles,
+      dataFolderPath,
+      dataFiles,
     });
   } catch (error : any) {
     console.error("FILE CHECK ERROR:", error);
