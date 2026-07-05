@@ -105,12 +105,12 @@ bugsRouter.post("/unarchive", async (c) => {
   return c.json({ success: true, project }, 200);
 });
 
-bugsRouter.post("/bugs-projects-file-check", async (c) => {
+bugsRouter.get("/bugs-projects-file-check", async (c) => {
   try {
 
     // adjust paths according to your structure
-    const bugsFilePath = path.resolve("bugs.json");
-    const projectsFilePath = path.resolve("projects.json");
+    const bugsFilePath = path.resolve("/data/bugs.json");
+    const projectsFilePath = path.resolve("/data/projects.json");
 
     // read files
     const bugsContent = await fs.readFile(bugsFilePath, "utf-8");
