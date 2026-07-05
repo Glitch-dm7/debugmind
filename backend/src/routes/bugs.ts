@@ -107,29 +107,32 @@ bugsRouter.post("/unarchive", async (c) => {
 
 bugsRouter.get("/bugs-projects-file-check", async (c) => {
   try {
+    // current working directory
+    console.log("CURRENT WORKING DIRECTORY:");
+    console.log(process.cwd());
 
-    // adjust paths according to your structure
-    const bugsFilePath = path.resolve("/data/bugs.json");
-    const projectsFilePath = path.resolve("/data/projects.json");
+    // list all files/folders in root
+    const rootFiles = await fs.readdir(process.cwd());
 
-    // read files
-    const bugsContent = await fs.readFile(bugsFilePath, "utf-8");
-    const projectsContent = await fs.readFile(projectsFilePath, "utf-8");
+    console.log("========== ROOT FILES ==========");
+    console.log(rootFiles);
 
-    // parse json
-    const bugsJson = JSON.parse(bugsContent);
-    const projectsJson = JSON.parse(projectsContent);
+    // optional: recursively inspect app folder
+    // const appPath = path.resolve("app");
 
-    // logs visible in Render logs/CLI
-    console.log("========== BUGS.JSON ==========");
-    console.log(JSON.stringify(bugsJson, null, 2));
+    // try {
+    //   const appFiles = await fs.readdir(appPath);
 
-    console.log("========== PROJECTS.JSON ==========");
-    console.log(JSON.stringify(projectsJson, null, 2));
+    //   console.log("========== APP FILES ==========");
+    //   console.log(appFiles);
+    // } catch (err) {
+    //   console.log("NO APP DIRECTORY FOUND");
+    // }
 
     return c.json({
       success: true,
-      message: "Files logged successfully",
+      cwd: process.cwd(),
+      rootFiles,
     });
   } catch (error : any) {
     console.error("FILE CHECK ERROR:", error);
