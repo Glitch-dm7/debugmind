@@ -159,6 +159,7 @@ export async function recallSimilarBugs(
   console.log("=== RAW TYPE ===", typeof raw);
   console.log("=== RAW DATA ===", JSON.stringify(raw, null, 2));
 
+  // Case 1: self-hosted returns string[]
   if (Array.isArray(raw) && typeof raw[0] === "string" && raw[0].trim()) {
     return [{
       id: "graph-result-0",
@@ -168,9 +169,40 @@ export async function recallSimilarBugs(
     }];
   }
 
-  const results: RawCogneeResult[] = Array.isArray(raw)
-    ? raw
-    : Array.isArray(raw?.results)
+  // Case 2: Cognee Cloud returns array of objects with different shapes
+  // Deduplicate by text content — Cloud returns same result multiple times
+  // as separate chunks
+  if (Array.isArray(raw) && typeof raw[0] === "object") {
+    const seen = new Set<string>();
+    return raw
+      .filter((r: RawCogneeResult) => {
+        // Extract text from all possible fields
+        const text =
+          r.text ??
+          r.content ??
+          (typeof r === "string" ? r : "") ??
+          "";
+        if (!text.trim() || seen.has(text)) return false;
+        seen.add(text);
+        return true;
+      })
+      .slice(0, 3) // top 3 unique results
+      .map((r: RawCogneeResult, i: number) => ({
+        id: r.id ?? `result-${i}`,
+        score: r.score ?? r.similarity_score ?? 0.7,
+        metadata: {
+          fingerprint: r.metadata?.fingerprint,
+          projectId: r.metadata?.projectId,
+          archived: r.metadata?.archived ?? false,
+          confirmCount: r.metadata?.confirmCount ?? 0,
+          denyCount: r.metadata?.denyCount ?? 0,
+        },
+        text: r.text ?? r.content ?? "",
+      }));
+  }
+
+  // Case 3: wrapped in results key
+  const results: RawCogneeResult[] = Array.isArray(raw?.results)
     ? raw.results
     : [];
 
