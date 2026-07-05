@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Search, Plus } from "lucide-react";
+import { Search, Plus, FolderOpen } from "lucide-react";
 import { RecallPanel } from "../components/RecallPanel";
 import { SubmitPanel } from "../components/SubmitPanel";
+import { ProjectsPanel } from "../components/ProjectsPanel";
 
 type Tab = "recall" | "submit" | "projects" ;
 
@@ -37,7 +38,7 @@ export default function BugsPage() {
             <Plus size={13} />
             log a bug
           </button>
-          {/* <button
+          <button
             onClick={() => setTab("projects")}
             className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left
                       font-mono text-xs transition-all duration-150
@@ -48,7 +49,7 @@ export default function BugsPage() {
           >
             <FolderOpen size={13} />
             projects
-          </button> */}
+          </button>
         </nav>
 
         <div className="mt-auto pt-4 border-t border-border">
@@ -83,7 +84,7 @@ export default function BugsPage() {
           <Plus size={16} />
           log bug
         </button>
-        {/* <button
+        <button
           onClick={() => setTab("projects")}
           className={`flex-1 flex flex-col items-center gap-1 py-3
                     font-mono text-[10px] transition-colors
@@ -91,7 +92,7 @@ export default function BugsPage() {
         >
           <FolderOpen size={16} />
           projects
-        </button> */}
+        </button>
       </div>
 
       {/* Content area */}
@@ -117,9 +118,9 @@ export default function BugsPage() {
         <div className="flex-1 overflow-hidden">
           {
             tab === "recall"   ? <RecallPanel />   :
-            // tab === "submit"   ? 
-            <SubmitPanel />   
-            // <ProjectsPanel />
+            tab === "submit"   ? 
+            <SubmitPanel />  : 
+            <ProjectsPanel />
           }
         </div>
       </div>
