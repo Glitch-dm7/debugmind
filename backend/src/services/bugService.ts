@@ -9,6 +9,7 @@ import type {
 import {
   rememberBug,
   recallSimilarBugs,
+  CogneeSearchResult,
 } from "./cogneeClient";
 import { bugStore } from "./bugStore";
 import { projectStore } from "./projectStore";
@@ -78,7 +79,6 @@ async function recall(
   const exactMatch = bugStore.getByFingerprint(fingerprint);
   if (exactMatch) {
     const proj = projectStore.getAll().find(p => p.id === exactMatch.projectId);
-    // Don't return results from archived projects
     if (proj?.archived) return [];
 
     const confidence = {
@@ -98,41 +98,52 @@ async function recall(
     }];
   }
 
-  // Step 2: semantic search — scope to active (non-archived) datasets only
+  // Step 2: semantic search — scope to active datasets only
   const activeProjects = projectStore.getActive();
   const activeDatasetNames = activeProjects.map(p => `debugmind_${p.id}`);
 
-  // If a specific project is requested, verify it's not archived
   const searchDatasets = projectId
     ? activeDatasetNames.filter(n => n === `debugmind_${projectId}`)
     : activeDatasetNames;
 
   if (searchDatasets.length === 0) return [];
 
-  const results = await recallSimilarBugs(normalized, searchDatasets);
+  // Search datasets one at a time — stop at first meaningful result.
+  // Avoids Cognee Cloud returning one result per dataset (noisy + slow).
+  let results: CogneeSearchResult[] = [];
+  for (const dataset of searchDatasets) {
+    const r = await recallSimilarBugs(normalized, [dataset]);
+    if (r.length > 0) {
+      results = r;
+      break;
+    }
+  }
 
   if (results.length === 0) return [];
 
   const allLocalBugs = bugStore.getAll().filter(b => {
     const proj = activeProjects.find(p => p.id === b.projectId);
-    return !!proj; // only bugs from active projects
+    return !!proj;
   });
 
   return results
     .map((r) => {
       const cogneeAnswer = r.text?.toLowerCase() ?? "";
 
-      const bestLocal = allLocalBugs
-        .map((bug) => {
-          const score = keywordOverlapScore(
-            cogneeAnswer,
-            `${bug.fix} ${bug.language} ${bug.tags.join(" ")}`.toLowerCase()
-          );
-          return { bug, score };
-        })
-        .sort((a, b) => b.score - a.score)[0];
+      // Try local enrichment first
+      const bestLocal = allLocalBugs.length > 0
+        ? allLocalBugs
+            .map((bug) => {
+              const score = keywordOverlapScore(
+                cogneeAnswer,
+                `${bug.fix} ${bug.language} ${bug.tags.join(" ")}`.toLowerCase()
+              );
+              return { bug, score };
+            })
+            .sort((a, b) => b.score - a.score)[0]
+        : null;
 
-      const local = bestLocal && bestLocal.score > 0 ? bestLocal.bug : null;
+      const local = bestLocal && bestLocal.score > 0.1 ? bestLocal.bug : null;
 
       const confidence: ConfidenceScore = {
         confirmCount: local?.confirmCount ?? 0,
@@ -145,8 +156,9 @@ async function recall(
         displayScore: computeDisplayScore(r.score, confidence),
         normalizedError: normalized,
         fix: r.text?.trim() ?? local?.fix ?? "No similar bugs found",
+        // Use Cognee Cloud's dataset_name first, then local, then unknown
         language: local?.language ?? "unknown",
-        projectId: local?.projectId ?? projectId ?? "unknown",
+        projectId: local?.projectId ?? r.metadata.projectId ?? projectId ?? "unknown",
         confidence,
         lastConfirmedAt: local?.lastConfirmedAt,
       } satisfies RecallResult;

@@ -159,7 +159,38 @@ export async function recallSimilarBugs(
   console.log("=== RAW TYPE ===", typeof raw);
   console.log("=== RAW DATA ===", JSON.stringify(raw, null, 2));
 
-  // Case 1: self-hosted returns string[]
+  // Case 1: Cognee Cloud — returns array of { search_result, dataset_name, ... }
+  // One object per dataset searched — filter out empty/negative results
+  if (raw && typeof raw === "object" && raw?.search_result) {
+    // Single dataset result
+    const text = raw.search_result[0];
+    if (!text?.trim() || isNegativeResult(text)) return [];
+    return [{
+      id: "graph-result-0",
+      score: 0.7,
+      metadata: { projectId: raw.dataset_name?.replace("debugmind_", "") },
+      text,
+    }];
+  }
+
+  // Case 1b: Cognee Cloud returns array of per-dataset results
+  if (Array.isArray(raw) && raw[0]?.search_result !== undefined) {
+    const validResults = raw
+      .filter((r: any) => {
+        const text = r.search_result?.[0] ?? "";
+        return text.trim() && !isNegativeResult(text);
+      })
+      .map((r: any, i: number) => ({
+        id: `graph-result-${i}`,
+        score: 0.7,
+        metadata: { projectId: r.dataset_name?.replace("debugmind_", "") },
+        text: r.search_result[0],
+      }));
+
+    return validResults.slice(0, 2); // top 2 valid results max
+  }
+  
+  // Case 2: self-hosted — returns string[]
   if (Array.isArray(raw) && typeof raw[0] === "string" && raw[0].trim()) {
     return [{
       id: "graph-result-0",
@@ -169,24 +200,17 @@ export async function recallSimilarBugs(
     }];
   }
 
-  // Case 2: Cognee Cloud returns array of objects with different shapes
-  // Deduplicate by text content — Cloud returns same result multiple times
-  // as separate chunks
+  // Case 3: array of objects
   if (Array.isArray(raw) && typeof raw[0] === "object") {
     const seen = new Set<string>();
     return raw
       .filter((r: RawCogneeResult) => {
-        // Extract text from all possible fields
-        const text =
-          r.text ??
-          r.content ??
-          (typeof r === "string" ? r : "") ??
-          "";
+        const text = r.text ?? r.content ?? "";
         if (!text.trim() || seen.has(text)) return false;
         seen.add(text);
         return true;
       })
-      .slice(0, 3) // top 3 unique results
+      .slice(0, 3)
       .map((r: RawCogneeResult, i: number) => ({
         id: r.id ?? `result-${i}`,
         score: r.score ?? r.similarity_score ?? 0.7,
@@ -201,7 +225,7 @@ export async function recallSimilarBugs(
       }));
   }
 
-  // Case 3: wrapped in results key
+  // Case 4: wrapped in results key
   const results: RawCogneeResult[] = Array.isArray(raw?.results)
     ? raw.results
     : [];
@@ -276,6 +300,22 @@ function formatBugAsDocument(bug: BugEntry): string {
     Confidence: ${bug.confidence.confirmCount} confirmations, ${bug.confidence.denyCount} denials
     Logged: ${bug.createdAt}
   `.trim();
+}
+
+function isNegativeResult(text: string): boolean {
+  const lower = text.toLowerCase();
+  return (
+    lower.includes("no analogous") ||
+    lower.includes("no similar bugs") ||
+    lower.includes("no directly similar") ||
+    lower.includes("knowledge-graph you provided contains only") ||
+    lower.includes("within the supplied context there are no") ||
+    lower.includes("i am sorry") ||
+    lower.includes("cannot find similar") ||
+    lower.includes("search_result") && lower.includes("[]") ||
+    text.trim() === "" ||
+    text.trim() === "[]"
+  );
 }
 
 // ─── Internal types ───────────────────────────────────────────────────────────
