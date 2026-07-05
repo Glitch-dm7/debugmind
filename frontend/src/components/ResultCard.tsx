@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ThumbsUp, ThumbsDown, CheckCircle2, XCircle, Clock, AlertTriangle } from "lucide-react";
 import { api, type RecallResult } from "../api/client";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface Props {
   result: RecallResult;
@@ -108,19 +109,52 @@ export function ResultCard({ result, index }: Props) {
           fix
         </p>
         <div className="text-text-primary leading-relaxed
-                        [&_table]:w-full [&_table]:text-xs [&_table]:border-collapse
-                        [&_td]:border [&_td]:border-border [&_td]:p-2 [&_td]:align-top
-                        [&_th]:border [&_th]:border-border [&_th]:p-2 [&_th]:bg-surface-2
-                        [&_th]:text-text-muted [&_th]:font-mono [&_th]:text-[10px]
-                        [&_code]:font-mono [&_code]:text-cyan [&_code]:bg-surface-2
-                        [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-xs
-                        [&_pre]:bg-surface-2 [&_pre]:p-3 [&_pre]:rounded-lg
-                        [&_pre]:overflow-x-auto [&_pre]:my-2
-                        [&_strong]:text-text-primary [&_strong]:font-semibold
-                        [&_p]:mb-2 [&_ul]:list-disc [&_ul]:pl-4 [&_li]:mb-1
-                        [&_blockquote]:border-l-2 [&_blockquote]:border-cyan
-                        [&_blockquote]:pl-3 [&_blockquote]:text-text-muted">
-          <ReactMarkdown>{result.fix}</ReactMarkdown>
+                        [&_table]:w-full
+                        [&_table]:text-xs
+                        [&_table]:border-collapse
+
+                        [&_td]:border
+                        [&_td]:border-border
+                        [&_td]:p-2
+                        [&_td]:align-top
+
+                        [&_th]:border
+                        [&_th]:border-border
+                        [&_th]:p-2
+                        [&_th]:bg-surface-2
+                        [&_th]:text-text-muted
+                        [&_th]:font-mono
+                        [&_th]:text-[10px]
+
+                        [&_code]:font-mono
+                        [&_code]:text-cyan
+                        [&_code]:bg-surface-2
+                        [&_code]:px-1
+                        [&_code]:py-0.5
+                        [&_code]:rounded
+                        [&_code]:text-xs
+
+                        [&_pre]:bg-surface-2
+                        [&_pre]:p-3
+                        [&_pre]:rounded-lg
+                        [&_pre]:overflow-x-auto
+                        [&_pre]:my-2
+
+                        [&_strong]:text-text-primary
+                        [&_strong]:font-semibold
+
+                        [&_p]:mb-2
+                        [&_ul]:list-disc
+                        [&_ul]:pl-4
+                        [&_li]:mb-1
+
+                        [&_blockquote]:border-l-2
+                        [&_blockquote]:border-cyan
+                        [&_blockquote]:pl-3
+                        [&_blockquote]:text-text-muted">
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            {result.fix}
+          </ReactMarkdown>
         </div>
       </div>
       
