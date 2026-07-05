@@ -57,7 +57,7 @@ export function ResultCard({ result, index }: Props) {
           <AlertTriangle size={14} className="text-warning mt-0.5 shrink-0" />
           <div>
             <p className="text-xs font-mono text-warning mb-1">
-              weak match — {similarityPct}% similarity
+              weak match
             </p>
             <p className="text-xs text-text-faint leading-relaxed">
               Cognee found something loosely related but couldn't surface a
@@ -86,7 +86,7 @@ export function ResultCard({ result, index }: Props) {
             {result.projectId}
           </span>
         </div>
-        <div className="flex items-center gap-2">
+        {/* <div className="flex items-center gap-2">
           <span className="text-[10px] font-mono text-text-faint">similarity</span>
           <span
             className="font-mono text-sm font-semibold"
@@ -98,7 +98,7 @@ export function ResultCard({ result, index }: Props) {
           >
             {similarityPct}%
           </span>
-        </div>
+        </div> */}
       </div>
 
       {/* Fix content */}

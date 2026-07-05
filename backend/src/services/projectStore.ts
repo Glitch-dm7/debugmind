@@ -82,4 +82,10 @@ export const projectStore = {
     delete store[projectId];
     save(store);
   },
+
+  getActiveDatasetNames(): string[] {
+    return Object.values(load())
+      .filter((p) => !p.archived)
+      .map((p) => `debugmind_${p.id}`);
+  },
 };

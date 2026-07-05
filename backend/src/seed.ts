@@ -268,7 +268,7 @@ async function seed() {
         `${num} Submitting: ${bug.language}/${bug.framework ?? "core"} — ${bug.projectId}... `
       );
 
-      const res = await fetch(`${BASE_URL}/bugs`, {
+      const res = await fetch(`${BASE_URL}/api/bugs`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(bug),
