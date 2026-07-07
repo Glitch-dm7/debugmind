@@ -34,7 +34,7 @@ export default function LandingPage() {
     <div className="flex-1 overflow-y-auto">
       {/* ── Hero ── */}
       <section className="relative min-h-[calc(100vh-4rem)] flex flex-col items-center justify-center px-6 overflow-hidden">
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(34,211,238,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(34,211,238,0.03)_1px,transparent_1px)] bg-[size:64px_64px]" />
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(34,211,238,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(34,211,238,0.03)_1px,transparent_1px)] bg-size-[64px_64px]" />
 
         <motion.div
           className="absolute -top-48 -right-48 w-96 h-96 rounded-full bg-cyan/5 blur-[128px]"
