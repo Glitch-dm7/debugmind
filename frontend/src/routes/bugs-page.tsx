@@ -1,8 +1,7 @@
 import { useState } from "react";
-import { Search, Plus, FolderOpen } from "lucide-react";
+import { Search, Plus } from "lucide-react";
 import { RecallPanel } from "../components/RecallPanel";
 import { SubmitPanel } from "../components/SubmitPanel";
-import { ProjectsPanel } from "../components/ProjectsPanel";
 
 type Tab = "recall" | "submit" | "projects" ;
 
